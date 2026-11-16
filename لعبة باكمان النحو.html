@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>باكمان النحو - مُلتهم الكلمات</title>
+    <!-- استيراد خط عربي واضح وعصري -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS للتصميم المتجاوب -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* إعدادات الخط والألوان الأساسية بنمط النيون الكلاسيكي */
+        :root {
+            --bg-dark: #090d16;
+            --wall-neon: #1d4ed8;
+            --wall-glow: #3b82f6;
+            --pacman-yellow: #facc15;
+            --accent-gold: #fbbf24;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            touch-action: none; /* منع التمرير باللمس أثناء اللعب */
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(29, 78, 216, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(250, 204, 21, 0.08) 0%, transparent 40%);
+        }
+
+        /* تأثير اهتزاز الشاشة عند التصادم */
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            15% { transform: translate(-8px, -6px) rotate(-1deg); }
+            30% { transform: translate(8px, 5px) rotate(1deg); }
+            45% { transform: translate(-6px, 6px) rotate(0deg); }
+            60% { transform: translate(6px, -4px) rotate(1deg); }
+            75% { transform: translate(-4px, 3px) rotate(-1deg); }
+        }
+
+        .shake-effect {
+            animation: screenShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* وميض أحمر عند الخسارة */
+        @keyframes damageFlash {
+            0% { box-shadow: inset 0 0 0 0 rgba(239, 68, 68, 0); }
+            30% { box-shadow: inset 0 0 60px 20px rgba(239, 68, 68, 0.65); }
+            100% { box-shadow: inset 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .damage-flash {
+            animation: damageFlash 0.5s ease-out;
+        }
+
+        /* حركة ظهور صندوق الحوار الكلاسيكي (مثل ألعاب ماريو وألعاب المغامرات) */
+        .dialogue-backdrop {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .dialogue-backdrop.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .dialogue-box {
+            transform: translateY(28px) scale(0.88);
+            opacity: 0;
+            transition: transform 0.36s cubic-bezier(0.22, 1.35, 0.36, 1), opacity 0.24s ease;
+        }
+        .dialogue-backdrop.is-open .dialogue-box {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        @keyframes floatArrow {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-4px); }
+        }
+        .dialogue-next-arrow {
+            display: inline-block;
+            animation: floatArrow 0.9s ease-in-out infinite;
+        }
+
+        /* أزرار الألعاب الكلاسيكية ثلاثية الأبعاد */
+        .arcade-btn {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 0 #b45309, 0 8px 20px rgba(245, 158, 11, 0.3);
+        }
+        .arcade-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #b45309, 0 12px 25px rgba(245, 158, 11, 0.45);
+        }
+        .arcade-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #b45309, 0 3px 10px rgba(245, 158, 11, 0.3);
+        }
+
+        /* بطاقات الخيارات التفاعلية */
+        .option-card {
+            transition: all 0.2s ease;
+            border: 2px solid rgba(59, 130, 246, 0.25);
+            background: rgba(15, 23, 42, 0.85);
+        }
+        .option-card:hover {
+            border-color: rgba(96, 165, 250, 0.6);
+            transform: translateY(-2px);
+        }
+        .option-card.active {
+            border-color: #facc15;
+            background: rgba(250, 204, 21, 0.12);
+            box-shadow: 0 0 18px rgba(250, 204, 21, 0.25);
+        }
+
+        /* حركة شعار باكمان في الغلاف */
+        @keyframes chompPreview {
+            0%, 100% { clip-path: polygon(100% 50%, 0% 0%, 0% 100%); }
+            50% { clip-path: polygon(100% 50%, 100% 15%, 0% 0%, 0% 100%, 100% 85%); }
+        }
+        .pacman-logo-icon {
+            width: 48px;
+            height: 48px;
+            background: #facc15;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.6);
+            position: relative;
+        }
+
+        /* إخفاء شريط التمرير مع السماح بالتمرير في الشاشات الصغيرة */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 14px;
+            box-shadow: 0 0 35px rgba(29, 78, 216, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            background-color: #060911;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center overflow-hidden">
+
+    <!-- ==================== 1. شاشة الغلاف والإعدادات (Start Screen) ==================== -->
+    <div id="startScreen" class="fixed inset-0 z-30 flex items-center justify-center p-3 sm:p-6 bg-[#090d16]/95 backdrop-blur-md overflow-y-auto no-scrollbar">
+        <div class="w-full max-w-3xl bg-slate-900/90 border-2 border-blue-500/40 rounded-3xl p-5 sm:p-8 shadow-2xl my-auto">
+            
+            <!-- رأس الغلاف والشعار -->
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center gap-3 bg-blue-950/70 border border-blue-400/30 px-5 py-2 rounded-full mb-3">
+                    <span class="w-3 h-3 rounded-full bg-yellow-400 animate-ping"></span>
+                    <span class="text-xs sm:text-sm font-bold text-blue-300 tracking-wide">التعلّم القائم على اللعب • النحو العربي</span>
+                </div>
+                
+                <div class="flex items-center justify-center gap-4 my-2">
+                    <!-- أيقونة باكمان SVG -->
+                    <svg class="w-12 h-12 sm:w-14 sm:h-14 drop-shadow-[0_0_15px_rgba(250,204,21,0.7)]" viewBox="0 0 100 100">
+                        <path d="M50,50 L92,22 A48,48 0 1,0 92,78 Z" fill="#facc15"/>
+                        <circle cx="52" cy="24" r="6" fill="#090d16"/>
+                    </svg>
+                    <h1 class="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-l from-yellow-300 via-amber-400 to-orange-400 drop-shadow">
+                        باكمان النحو
+                    </h1>
+                    <!-- أيقونة شبح SVG -->
+                    <svg class="w-11 h-11 sm:w-13 sm:h-13 drop-shadow-[0_0_12px_rgba(239,68,68,0.6)]" viewBox="0 0 100 100">
+                        <path d="M15,90 L15,45 A35,35 0 0,1 85,45 L85,90 L73,78 L61,90 L50,78 L39,90 L27,78 Z" fill="#ef4444"/>
+                        <circle cx="38" cy="42" r="9" fill="white"/>
+                        <circle cx="62" cy="42" r="9" fill="white"/>
+                        <circle cx="35" cy="42" r="4.5" fill="#1e3a8a"/>
+                        <circle cx="59" cy="42" r="4.5" fill="#1e3a8a"/>
+                    </svg>
+                </div>
+                <p class="text-slate-300 text-sm sm:text-base max-w-xl mx-auto">
+                    تحكّم بباكمان داخل المتاهة، التهم الكلمات الصحيحة حسب القاعدة المطلوبة، واهرب من الأشباح أو اطردها بكرات الطاقة الذهبية!
+                </p>
+            </div>
+
+            <!-- إعدادات اللعبة -->
+            <div class="space-y-5">
+                <!-- اختيار المسار التعليمي -->
+                <div>
+                    <label class="block text-sm font-bold text-blue-300 mb-2">1. اختر المسار التعليمي (الدرس):</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="modeSelector">
+                        <button type="button" data-mode="pos" class="option-card active rounded-2xl p-3 text-right cursor-pointer">
+                            <div class="font-bold text-yellow-400 text-base">أقسام الكلمة</div>
+                            <div class="text-xs text-slate-400 mt-1">الاسم • الفعل • الحرف</div>
+                        </button>
+                        <button type="button" data-mode="tense" class="option-card rounded-2xl p-3 text-right cursor-pointer">
+                            <div class="font-bold text-emerald-400 text-base">أزمنة الفعل</div>
+                            <div class="text-xs text-slate-400 mt-1">الماضي • المضارع • الأمر</div>
+                        </button>
+                        <button type="button" data-mode="mixed" class="option-card rounded-2xl p-3 text-right cursor-pointer">
+                            <div class="font-bold text-purple-400 text-base">تحدي التبديل الشامل</div>
+                            <div class="text-xs text-slate-400 mt-1">يتغير الهدف تلقائيًا أثناء اللعب!</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- اختيار المرحلة الدراسية ومستوى الصعوبة -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-blue-300 mb-2">2. المرحلة الدراسية (مستوى المفردات):</label>
+                        <div class="grid grid-cols-3 gap-2" id="gradeSelector">
+                            <button type="button" data-grade="elementary" class="option-card active rounded-xl py-2.5 px-2 text-center cursor-pointer">
+                                <div class="font-bold text-sm text-white">ابتدائي</div>
+                                <div class="text-[11px] text-slate-400">الصفوف 4-6</div>
+                            </button>
+                            <button type="button" data-grade="middle" class="option-card rounded-xl py-2.5 px-2 text-center cursor-pointer">
+                                <div class="font-bold text-sm text-white">متوسط</div>
+                                <div class="text-[11px] text-slate-400">الصفوف 7-9</div>
+                            </button>
+                            <button type="button" data-grade="high" class="option-card rounded-xl py-2.5 px-2 text-center cursor-pointer">
+                                <div class="font-bold text-sm text-white">ثانوي</div>
+                                <div class="text-[11px] text-slate-400">الصفوف 10-12</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-blue-300 mb-2">3. مستوى الصعوبة (عدد الوحوش):</label>
+                        <div class="grid grid-cols-3 gap-2" id="diffSelector">
+                            <button type="button" data-diff="easy" class="option-card active rounded-xl py-2.5 px-2 text-center cursor-pointer">
+                                <div class="font-bold text-sm text-emerald-400">مبتدئ</div>
+                                <div class="text-[11px] text-slate-400">وحشان</div>
+                            </button>
+                            <button type="button" data-diff="medium" class="option-card rounded-xl py-2.5 px-2 text-center cursor-pointer">
+                                <div class="font-bold text-sm text-amber-400">متوسط</div>
+                                <div class="text-[11px] text-slate-400">3 وحوش</div>
+                            </button>
+                            <button type="button" data-diff="hard" class="option-card rounded-xl py-2.5 px-2 text-center cursor-pointer">
+                                <div class="font-bold text-sm text-rose-400">متقدم</div>
+                                <div class="text-[11px] text-slate-400">4 وحوش</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. التحكم في سرعة الوحوش -->
+                <div>
+                    <label class="block text-sm font-bold text-blue-300 mb-2">4. سرعة حركة الوحوش:</label>
+                    <div class="grid grid-cols-3 gap-2" id="ghostSpeedSelector">
+                        <button type="button" data-speed="slow" class="option-card active rounded-xl py-2 px-3 text-center cursor-pointer">
+                            <div class="font-bold text-sm text-cyan-300">بطيئة 🐢</div>
+                            <div class="text-[11px] text-slate-400">وقت أطول للتفكير</div>
+                        </button>
+                        <button type="button" data-speed="normal" class="option-card rounded-xl py-2 px-3 text-center cursor-pointer">
+                            <div class="font-bold text-sm text-yellow-300">متوسطة 🚶</div>
+                            <div class="text-[11px] text-slate-400">توازن بين السرعة والدقة</div>
+                        </button>
+                        <button type="button" data-speed="fast" class="option-card rounded-xl py-2 px-3 text-center cursor-pointer">
+                            <div class="font-bold text-sm text-rose-400">سريعة ⚡</div>
+                            <div class="text-[11px] text-slate-400">تحدٍّ عالي السرعة</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- خيارات التمايز التعليمي والتغذية الراجعة -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-800/70 border border-slate-700/70 rounded-2xl px-4 py-3">
+                    <div class="flex items-center gap-2.5">
+                        <input type="checkbox" id="hintToggle" class="w-5 h-5 accent-yellow-400 rounded cursor-pointer shrink-0">
+                        <label for="hintToggle" class="text-xs sm:text-sm text-slate-200 cursor-pointer">
+                            <span class="font-bold text-yellow-300">وضع التدريب:</span> تمييز الكلمات الصحيحة بإطار مضيء
+                        </label>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <input type="checkbox" id="explainToggle" checked class="w-5 h-5 accent-emerald-400 rounded cursor-pointer shrink-0">
+                        <label for="explainToggle" class="text-xs sm:text-sm text-slate-200 cursor-pointer">
+                            <span class="font-bold text-emerald-300">التعلّم من الخطأ:</span> إيقاف مؤقت وشرح نحوي عند أكل كلمة خاطئة
+                        </label>
+                    </div>
+                </div>
+
+                <!-- زر الانطلاق -->
+                <button id="startBtn" class="arcade-btn w-full bg-gradient-to-l from-amber-500 to-yellow-400 text-slate-950 font-black text-xl sm:text-2xl py-3.5 rounded-2xl cursor-pointer flex items-center justify-center gap-3">
+                    <span>ابدأ المغامرة الآن</span>
+                    <span class="text-2xl">🚀</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 2. شاشة اللعب الرئيسية (Game HUD & Canvas) ==================== -->
+    <div id="gameContainer" class="hidden w-full h-full flex flex-col items-center justify-between p-2 sm:p-4 max-w-5xl mx-auto">
+        
+        <!-- شريط المعلومات العلوي (HUD) -->
+        <header class="w-full bg-slate-900/90 border border-blue-500/40 rounded-2xl px-3 py-2 sm:px-5 sm:py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-lg z-10">
+            
+            <!-- الهدف الحالي -->
+            <div class="flex items-center gap-2 sm:gap-3 bg-blue-950/90 border border-blue-400/40 px-3 py-1.5 rounded-xl">
+                <span class="text-xs sm:text-sm text-blue-300 font-bold">المطلوب:</span>
+                <span id="targetLabel" class="text-base sm:text-xl font-black text-yellow-400 drop-shadow">التهم الأسماء</span>
+                <span id="targetProgress" class="text-xs bg-blue-800/80 text-white px-2 py-0.5 rounded-lg font-bold">0/8</span>
+            </div>
+
+            <!-- النقاط والسلسلة -->
+            <div class="flex items-center gap-3 sm:gap-5">
+                <div class="text-center">
+                    <div class="text-[10px] sm:text-xs text-slate-400">النقاط</div>
+                    <div id="scoreDisplay" class="text-base sm:text-xl font-black text-white">0</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-[10px] sm:text-xs text-slate-400">المستوى</div>
+                    <div id="levelDisplay" class="text-base sm:text-xl font-black text-amber-400">1</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-[10px] sm:text-xs text-slate-400">المحاولات</div>
+                    <div id="livesDisplay" class="text-sm sm:text-lg tracking-wider">❤️❤️❤️</div>
+                </div>
+            </div>
+
+            <!-- أزرار التحكم السريعة (سرعة الوحوش / شرح الخطأ / صوت / إيقاف / قائمة) -->
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <!-- محول سرعة الوحوش أثناء اللعب -->
+                <div class="flex items-center bg-slate-800 border border-slate-700 rounded-xl p-0.5 text-xs" title="تغيير سرعة الوحوش">
+                    <button type="button" data-speed="slow" class="ingame-speed-btn px-2 py-1 rounded-lg font-bold bg-blue-600 text-white cursor-pointer">بطيء</button>
+                    <button type="button" data-speed="normal" class="ingame-speed-btn px-2 py-1 rounded-lg font-bold text-slate-300 hover:text-white cursor-pointer">متوسط</button>
+                    <button type="button" data-speed="fast" class="ingame-speed-btn px-2 py-1 rounded-lg font-bold text-slate-300 hover:text-white cursor-pointer">سريع</button>
+                </div>
+                <button id="ingameExplainBtn" title="تفعيل/إيقاف الشرح النحوي عند الخطأ" class="p-2 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 rounded-xl border border-emerald-500/40 cursor-pointer text-sm sm:text-base">
+                    💡
+                </button>
+                <button id="soundToggleBtn" title="كتم/تشغيل الصوت" class="p-2 bg-slate-800 hover:bg-slate-700 text-yellow-400 rounded-xl border border-slate-700 cursor-pointer text-sm sm:text-base">
+                    🔊
+                </button>
+                <button id="pauseBtn" title="إيقاف مؤقت" class="p-2 bg-slate-800 hover:bg-slate-700 text-blue-300 rounded-xl border border-slate-700 cursor-pointer text-sm sm:text-base">
+                    ⏸️
+                </button>
+                <button id="homeBtn" title="القائمة الرئيسية" class="p-2 bg-slate-800 hover:bg-rose-900/60 text-rose-300 rounded-xl border border-slate-700 cursor-pointer text-sm sm:text-base">
+                    🏠
+                </button>
+            </div>
+        </header>
+
+        <!-- شريط تنبيه وضع الطاقة أو التبديل (يظهر عند الحاجة) -->
+        <div id="statusBanner" class="h-6 flex items-center justify-center text-xs sm:text-sm font-bold text-cyan-300 transition-opacity duration-200 opacity-0">
+            ⚡ وضع الطاقة مفعل! اطرد الأشباح الآن!
+        </div>
+
+        <!-- منطقة الكانفاس المتجاوبة -->
+        <div id="canvasWrapper" class="relative flex-1 w-full flex items-center justify-center min-h-0 my-1">
+            <canvas id="gameCanvas"></canvas>
+
+            <!-- طبقة العد التنازلي أو الإيقاف المؤقت -->
+            <div id="overlayMessage" class="hidden absolute inset-0 bg-slate-950/75 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center text-center p-4 z-20">
+                <div id="overlayTitle" class="text-4xl sm:text-6xl font-black text-yellow-400 mb-2 drop-shadow-lg">استعد!</div>
+                <div id="overlaySub" class="text-base sm:text-xl text-blue-200 font-bold mb-5">التهم: الأفعال الماضية</div>
+                <button id="resumeBtn" class="hidden arcade-btn bg-yellow-400 text-slate-950 font-black px-8 py-3 rounded-2xl text-lg cursor-pointer">
+                    متابعة اللعب ▶️
+                </button>
+            </div>
+
+            <!-- نافذة التغذية الراجعة النحوية عند الخطأ (Grammar Explanation Modal) -->
+            <!-- نافذة التغذية الراجعة النحوية عند الخطأ (صندوق حواري مدمج بأسلوب ألعاب المغامرات) -->
+            <div id="grammarFeedbackModal" class="dialogue-backdrop absolute inset-0 bg-slate-950/35 rounded-2xl flex items-end justify-center p-3 sm:p-5 z-30">
+                <div class="dialogue-box w-full max-w-lg bg-gradient-to-b from-slate-900/95 to-slate-950/95 backdrop-blur-md border-2 border-amber-400/80 rounded-2xl p-3.5 sm:p-4 text-right shadow-[0_12px_35px_rgba(0,0,0,0.85),0_0_20px_rgba(251,191,36,0.25)]">
+                    <!-- رأس الصندوق الحواري -->
+                    <div class="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-700/80">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-full bg-amber-400/20 border border-amber-400/50 flex items-center justify-center text-sm shadow-inner">🧙‍♂️</span>
+                            <div>
+                                <span class="text-[11px] font-bold text-amber-300 block leading-none">مُرشد النحو</span>
+                                <span id="feedbackActualType" class="text-xs sm:text-sm font-black text-rose-400">تصنيف الكلمة</span>
+                            </div>
+                        </div>
+                        <span id="feedbackWordBadge" class="bg-rose-500/20 border border-rose-400/50 text-rose-200 px-2.5 py-0.5 rounded-lg font-black text-sm sm:text-base shadow-sm">
+                            الكلمة
+                        </span>
+                    </div>
+
+                    <!-- نص الحوار التعليمي -->
+                    <p id="feedbackReason" class="text-slate-100 leading-relaxed text-xs sm:text-sm min-h-[3.2rem] mb-3">
+                        الشرح اللغوي هنا...
+                    </p>
+
+                    <!-- زر المتابعة بأسلوب صناديق الحوار -->
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[11px] text-slate-400 hidden sm:inline">اضغط <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-600 rounded text-[10px] text-amber-300">Enter</kbd> للمتابعة</span>
+                        <button id="continueAfterErrorBtn" class="arcade-btn mr-auto bg-gradient-to-l from-amber-400 to-yellow-300 text-slate-950 font-black py-1.5 px-4 rounded-xl text-xs sm:text-sm cursor-pointer flex items-center gap-1.5">
+                            <span>فهمت، تابع اللعب</span>
+                            <span class="dialogue-next-arrow">◀</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- أزرار التحكم اللمسية الافتراضية للشاشات التفاعلية والهواتف -->
+        <div class="sm:hidden w-full flex justify-center pb-1 z-10">
+            <div class="grid grid-cols-3 gap-1.5 w-36 h-28">
+                <div></div>
+                <button type="button" data-dir="UP" class="dpad-btn bg-slate-800/90 active:bg-yellow-400 active:text-slate-950 border border-blue-500/40 rounded-xl flex items-center justify-center text-lg font-black">▲</button>
+                <div></div>
+                <button type="button" data-dir="RIGHT" class="dpad-btn bg-slate-800/90 active:bg-yellow-400 active:text-slate-950 border border-blue-500/40 rounded-xl flex items-center justify-center text-lg font-black">▶</button>
+                <button type="button" data-dir="DOWN" class="dpad-btn bg-slate-800/90 active:bg-yellow-400 active:text-slate-950 border border-blue-500/40 rounded-xl flex items-center justify-center text-lg font-black">▼</button>
+                <button type="button" data-dir="LEFT" class="dpad-btn bg-slate-800/90 active:bg-yellow-400 active:text-slate-950 border border-blue-500/40 rounded-xl flex items-center justify-center text-lg font-black">◀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 3. شاشة نهاية المرحلة / التقييم (Result Modal) ==================== -->
+    <div id="resultModal" class="hidden fixed inset-0 z-40 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-slate-900 border-2 border-yellow-400/50 rounded-3xl p-6 sm:p-8 text-center shadow-2xl transform transition-all">
+            <div id="resultBadge" class="inline-block px-4 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mb-3">
+                أحسنت يا بطل النحو!
+            </div>
+            <h2 id="resultTitle" class="text-3xl sm:text-4xl font-black text-white mb-2">اكتملت المرحلة!</h2>
+            
+            <!-- النجوم المكتسبة -->
+            <div id="starsContainer" class="flex justify-center gap-3 text-4xl sm:text-5xl my-4">
+                <span>⭐</span><span>⭐</span><span>⭐</span>
+            </div>
+
+            <!-- الإحصائيات -->
+            <div class="grid grid-cols-3 gap-2 bg-slate-800/80 rounded-2xl p-3 mb-5 border border-slate-700">
+                <div>
+                    <div class="text-xs text-slate-400">النقاط</div>
+                    <div id="finalScore" class="text-lg font-black text-yellow-400">0</div>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400">الدقة النحوية</div>
+                    <div id="finalAccuracy" class="text-lg font-black text-emerald-400">100%</div>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400">الوسام</div>
+                    <div id="finalMedal" class="text-xs font-bold text-blue-300 mt-1">وسام الإتقان</div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="nextLevelBtn" class="arcade-btn flex-1 bg-gradient-to-l from-emerald-500 to-teal-400 text-slate-950 font-black py-3 rounded-2xl text-lg cursor-pointer">
+                    المستوى التالي 🚀
+                </button>
+                <button id="restartBtn" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-2xl border border-slate-600 cursor-pointer">
+                    إعادة اللعب 🔄
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ============================================================================
+         * 1. قاعدة البيانات اللغوية المصنفة حسب المرحلة الدراسية والتصنيف النحوي
+         * ============================================================================
+         */
+        const WORD_BANK = {
+            elementary: {
+                noun: ["مَدْرَسَةٌ", "كِتَابٌ", "عُصْفُورٌ", "شَمْسٌ", "قَلَمٌ", "حَدِيقَةٌ", "تِلْمِيذٌ", "بَحْرٌ", "نَجْمَةٌ", "بَيْتٌ", "صَدِيقٌ", "زَهْرَةٌ"],
+                particle: ["فِي", "مِنْ", "إِلَى", "عَلَى", "عَنْ", "ثُمَّ", "أَوْ", "لَمْ", "لَنْ", "بَلْ", "يَا", "هَلْ"],
+                past: ["كَتَبَ", "ذَهَبَ", "قَرَأَ", "لَعِبَ", "شَرِبَ", "نَجَحَ", "رَسَمَ", "فَتَحَ", "سَمِعَ", "خَرَجَ"],
+                present: ["يَكْتُبُ", "تَقْرَأُ", "نَلْعَبُ", "أَرْسُمُ", "يَجْرِي", "تُشْرِقُ", "يَفْهَمُ", "نَزْرَعُ", "يَسْبَحُ", "تُغَرِّدُ"],
+                imperative: ["اِقْرَأْ", "اُكْتُبْ", "اِجْلِسْ", "اِسْمَعْ", "اِحْفَظْ", "نَمْ", "قُمْ", "اِرْسُمْ", "تَعَلَّمْ", "سَاعِدْ"]
+            },
+            middle: {
+                noun: ["مُجْتَهِدُونَ", "حَضَارَةٌ", "اِبْتِسَامَةٌ", "مُسْتَقْبَلٌ", "عُلَمَاءُ", "تَعَاوُنٌ", "إِخْلَاصٌ", "مَكْتَبَتَانِ", "وَطَنِيَّةٌ", "إِنْجَازٌ"],
+                particle: ["إِنَّ", "لَعَلَّ", "لَيْتَ", "كَأَنَّ", "لَكِنَّ", "حَتَّى", "مُنْذُ", "لَوْلَا", "إِذَا", "كَيْ"],
+                past: ["اِنْتَصَرَ", "تَعَلَّمَ", "اِسْتَقْبَلَ", "أَكْرَمَ", "تَعَاوَنَ", "سَعَى", "دَعَا", "قَضَى", "اِجْتَهَدَ", "أَنْجَزَ"],
+                present: ["يَسْعَى", "يَدْعُو", "يَقْضِي", "يَتَعَاوَنُونَ", "تَسْتَقْبِلُ", "نُكْرِمُ", "يَجْتَهِدَانِ", "تَرْتَقِي", "يُنْجِزُ", "نَبْنِي"],
+                imperative: ["اِقْضِ", "اُدْعُ", "اِسْعَ", "تَعَاوَنْ", "أَكْرِمْ", "اِسْتَقْبِلْ", "حَافِظُوا", "اِجْتَهِدِي", "تَأَمَّلْ", "اِرْتَقِ"]
+            },
+            high: {
+                noun: ["اِسْتِغْفَارٌ", "تَفَاعُلٌ", "مُتَفَائِلٌ", "اِسْتِقْرَارٌ", "مَسْؤُولِيَّةٌ", "اِنْطِلَاقٌ", "مُبْدِعُونَ", "تَضْحِيَةٌ", "مُصْطَفًى", "اِزْدِهَارٌ"],
+                particle: ["لَوْمَا", "أَمَّا", "إِمَّا", "لَمَّا", "بَيْدَ", "رُبَّ", "خَلَا", "حَاشَا", "أَلَا", "هَلَّا"],
+                past: ["اِسْتَغْفَرَ", "تَفَاعَلَ", "اِطْمَأَنَّ", "اِزْدَهَرَ", "تَغَاضَى", "اِهْتَدَى", "اِسْتَقَامَ", "تَدَحْرَجَ", "أَضَاءَ", "اِنْبَرَى"],
+                present: ["يَسْتَغْفِرُ", "يَتَفَاعَلُ", "يَطْمَئِنُّ", "يَزْدَهِرُ", "يَتَغَاضَى", "يَهْتَدِي", "يَسْتَقِيمُ", "يُضِيءُ", "تَتَسَامَى", "نَسْتَشْرِفُ"],
+                imperative: ["اِسْتَغْفِرْ", "تَفَاعَلْ", "اِطْمَئِنَّ", "اِسْتَقِمْ", "اِهْتَدِ", "تَغَاضَ", "أَضِئْ", "اِسْتَشْرِفْ", "تَسَامَ", "اِنْطَلِقْ"]
+            }
+        };
+
+        // تعريف التصنيفات وعناوينها بالعربية مع القاعدة النحوية لكل تصنيف
+        const CATEGORIES = {
+            noun: {
+                title: "اسم",
+                prompt: "التهم: الأسماء فقط",
+                color: "#38bdf8",
+                ruleDesc: "الاسم يدل على إنسان أو حيوان أو نبات أو جماد أو معنى، ويقبل التنوين أو (الـ) التعريف أو حروف الجر."
+            },
+            verb: {
+                title: "فعل",
+                prompt: "التهم: الأفعال فقط",
+                color: "#4ade80",
+                ruleDesc: "الفعل يدل على حدث مقترن بزمن معين (ماضٍ أو مضارع أو أمر)، ولا يقبل التنوين أو (الـ) التعريف."
+            },
+            particle: {
+                title: "حرف",
+                prompt: "التهم: الحروف فقط",
+                color: "#f472b6",
+                ruleDesc: "الحرف كلمة لا يظهر معناها كاملًا إلا مع غيرها في الجملة (مثل حروف الجر والعطف والنفي والشرط)."
+            },
+            past: {
+                title: "فعل ماضٍ",
+                prompt: "التهم: الأفعال الماضية",
+                color: "#fb923c",
+                ruleDesc: "الفعل الماضي يدل على حدث وقع وانتهى قبل زمن التكلّم، ويقبل تاء الفاعل أو تاء التأنيث الساكنة في آخره."
+            },
+            present: {
+                title: "فعل مضارع",
+                prompt: "التهم: الأفعال المضارعة",
+                color: "#a78bfa",
+                ruleDesc: "الفعل المضارع يدل على حدث يقع في الحاضر أو المستقبل، ويبدأ بأحد حروف المضارعة (نـ، أ، تـ، يـ) ويقبل (سوف / لم)."
+            },
+            imperative: {
+                title: "فعل أمر",
+                prompt: "التهم: أفعال الأمر",
+                color: "#facc15",
+                ruleDesc: "فعل الأمر يُطلب به حدوث الفعل في المستقبل بصيغة المخاطب، ويقبل ياء المخاطبة في آخره."
+            }
+        };
+
+        /**
+         * توليد تفسير نحوي مخصص للكلمة الخاطئة مقارنة بالهدف المطلوب
+         */
+        function buildGrammarExplanation(wordObj, targetCat) {
+            const actualCat = wordObj.category;
+            const actualInfo = CATEGORIES[actualCat];
+            const targetInfo = CATEGORIES[targetCat];
+
+            let specificNote = "";
+            if (targetCat === 'noun' && actualCat !== 'noun') {
+                specificNote = `كلمة «${wordObj.text}» هي (${actualInfo.title})؛ لأنها لا تقبل التنوين ولا (الـ) التعريف، بينما المطلوب في هذه المرحلة هو جمع الأسماء فقط.`;
+            } else if (targetCat === 'verb' && actualCat === 'noun') {
+                specificNote = `كلمة «${wordObj.text}» هي (اسم)؛ لأنها تدل على معنى أو مسمى مجرد من الزمن وتقبل علامات الاسم، وليست فعلًا يدل على حدث.`;
+            } else if (targetCat === 'verb' && actualCat === 'particle') {
+                specificNote = `كلمة «${wordObj.text}» هي (حرف)؛ فهي أداة ربط أو معنى لا تدل على حدث ولا تقترن بزمن، لذا لا تُعدّ فعلًا.`;
+            } else if (targetCat === 'particle') {
+                specificNote = `كلمة «${wordObj.text}» هي (${actualInfo.title}) لها معنى مستقل في ذاتها، أما الحرف فلا يكتمل معناه إلا داخل الجملة مع غيره.`;
+            } else {
+                // في حالة أزمنة الفعل (ماضٍ / مضارع / أمر)
+                specificNote = `كلمة «${wordObj.text}» هي (${actualInfo.title}) وليست (${targetInfo.title}). ${actualInfo.ruleDesc}`;
+            }
+
+            return {
+                actualTitle: actualInfo.title,
+                reason: `${specificNote} — تذكّر: ${targetInfo.ruleDesc}`
+            };
+        }
+
+        /**
+         * ============================================================================
+         * 2. محرك المؤثرات الصوتية الكلاسيكية (Web Audio API - بدون ملفات خارجية)
+         * ============================================================================
+         */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+                this.wakaToggle = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playTone(freq, type, duration, vol = 0.12, slideTo = null) {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    if (slideTo) {
+                        osc.frequency.exponentialRampToValueAtTime(slideTo, this.ctx.currentTime + duration);
+                    }
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+
+            // صوت حركة باكمان (واكا-واكا)
+            playWaka() {
+                this.wakaToggle = !this.wakaToggle;
+                this.playTone(this.wakaToggle ? 260 : 340, 'triangle', 0.08, 0.04);
+            }
+
+            // صوت التهام كلمة صحيحة (نغمة صاعدة مبهجة)
+            playCorrect(combo = 1) {
+                const base = 520 + Math.min(combo, 6) * 60;
+                this.playTone(base, 'sine', 0.12, 0.18, base * 1.4);
+                setTimeout(() => this.playTone(base * 1.5, 'sine', 0.16, 0.16), 70);
+            }
+
+            // صوت التهام كلمة خاطئة
+            playWrong() {
+                this.playTone(170, 'sawtooth', 0.25, 0.15, 95);
+            }
+
+            // صوت تفعيل كرة الطاقة الذهبية
+            playPowerUp() {
+                const notes = [440, 554, 659, 880];
+                notes.forEach((n, i) => {
+                    setTimeout(() => this.playTone(n, 'square', 0.12, 0.12), i * 65);
+                });
+            }
+
+            // صوت طرد شبح
+            playEatGhost() {
+                this.playTone(300, 'sawtooth', 0.3, 0.18, 950);
+            }
+
+            // صوت التصادم مع شبح
+            playHit() {
+                this.playTone(420, 'sawtooth', 0.45, 0.2, 65);
+            }
+
+            // صوت الفوز بالمرحلة
+            playWin() {
+                const melody = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50];
+                melody.forEach((n, i) => {
+                    setTimeout(() => this.playTone(n, 'triangle', 0.18, 0.18), i * 110);
+                });
+            }
+        }
+
+        const audio = new SoundEngine();
+
+        /**
+         * ============================================================================
+         * 3. تصميم المتاهة (Grid Map: 19 عمود × 15 صف)
+         * 1 = جدار، 0 = ممر، 2 = نقطة طاقة ذهبية، 3 = بيت الأشباح
+         * ============================================================================
+         */
+        const MAZE_TEMPLATE = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,2,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,2,1],
+            [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1],
+            [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,0,1],
+            [1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
+            [1,1,1,1,0,1,1,1,0,3,0,1,1,1,0,1,1,1,1],
+            [1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1],
+            [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
+            [1,2,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,2,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        const ROWS = MAZE_TEMPLATE.length;
+        const COLS = MAZE_TEMPLATE[0].length;
+
+        /**
+         * ============================================================================
+         * 4. متغيرات حالة اللعبة وإعداداتها
+         * ============================================================================
+         */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let config = {
+            mode: 'pos',          // pos | tense | mixed
+            grade: 'elementary',  // elementary | middle | high
+            difficulty: 'easy',   // easy | medium | hard
+            ghostSpeed: 'slow',   // slow | normal | fast
+            showHints: false,
+            explainMistakes: true
+        };
+
+        const GHOST_SPEED_MAP = {
+            slow: 2.1,
+            normal: 3.1,
+            fast: 4.1
+        };
+
+        let state = {
+            running: false,
+            paused: false,
+            inFeedbackModal: false,
+            level: 1,
+            score: 0,
+            lives: 3,
+            combo: 0,
+            correctHits: 0,
+            wrongHits: 0,
+            currentTarget: 'noun',
+            targetTotal: 0,
+            targetCollected: 0,
+            powerTimer: 0,
+            invulnTimer: 0,
+            switchTimer: 0,
+            wakaTimer: 0,
+            tileSize: 32
+        };
+
+        let maze = [];
+        let wordItems = [];
+        let powerPellets = [];
+        let particles = [];
+        let floatingTexts = [];
+
+        // كائن البطل (باكمان)
+        let pacman = {
+            x: 9,
+            y: 10,
+            dir: { x: 0, y: 0 },
+            nextDir: { x: 0, y: 0 },
+            speed: 4.8,
+            mouthAngle: 0.25,
+            mouthOpening: true,
+            rotation: 0
+        };
+
+        // الأشباح الأربعة بشخصيات وألوان مختلفة
+        const GHOST_STYLES = [
+            { name: "المُطارد", color: "#ef4444", type: "chase" },
+            { name: "المُحاصر", color: "#ec4899", type: "ambush" },
+            { name: "المُباغت", color: "#06b6d4", type: "random" },
+            { name: "المُتردد", color: "#f97316", type: "random" }
+        ];
+        let ghosts = [];
+
+        /**
+         * ============================================================================
+         * 5. تهيئة واجهة المستخدم وأزرار التحكم
+         * ============================================================================
+         */
+        function setupUIListeners() {
+            // اختيار المسار التعليمي
+            document.querySelectorAll('#modeSelector button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#modeSelector button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    config.mode = btn.dataset.mode;
+                });
+            });
+
+            // اختيار المرحلة الدراسية
+            document.querySelectorAll('#gradeSelector button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#gradeSelector button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    config.grade = btn.dataset.grade;
+                });
+            });
+
+            // اختيار الصعوبة
+            document.querySelectorAll('#diffSelector button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#diffSelector button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    config.difficulty = btn.dataset.diff;
+                });
+            });
+
+            // اختيار سرعة الوحوش من شاشة البداية
+            document.querySelectorAll('#ghostSpeedSelector button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setGhostSpeedSetting(btn.dataset.speed);
+                });
+            });
+
+            // أزرار تغيير سرعة الوحوش أثناء اللعب
+            document.querySelectorAll('.ingame-speed-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setGhostSpeedSetting(btn.dataset.speed);
+                });
+            });
+
+            // خيار التلميحات البصرية
+            document.getElementById('hintToggle').addEventListener('change', (e) => {
+                config.showHints = e.target.checked;
+            });
+
+            // خيار التغذية الراجعة النحوية عند الخطأ (من شاشة البداية وأثناء اللعب)
+            document.getElementById('explainToggle').addEventListener('change', (e) => {
+                config.explainMistakes = e.target.checked;
+                updateExplainToggleUI();
+            });
+
+            document.getElementById('ingameExplainBtn').addEventListener('click', () => {
+                config.explainMistakes = !config.explainMistakes;
+                document.getElementById('explainToggle').checked = config.explainMistakes;
+                updateExplainToggleUI();
+                spawnFloatingText(
+                    pacman.x,
+                    pacman.y - 0.5,
+                    config.explainMistakes ? "تفعيل الشرح النحوي 💡" : "إيقاف الشرح النحوي",
+                    config.explainMistakes ? "#34d399" : "#94a3b8"
+                );
+            });
+
+            // زر متابعة اللعب بعد قراءة الشرح النحوي
+            document.getElementById('continueAfterErrorBtn').addEventListener('click', closeGrammarFeedback);
+
+            // زر البدء
+            document.getElementById('startBtn').addEventListener('click', () => {
+                audio.init();
+                startNewGame();
+            });
+
+            // أزرار الشريط العلوي
+            document.getElementById('soundToggleBtn').addEventListener('click', () => {
+                audio.muted = !audio.muted;
+                document.getElementById('soundToggleBtn').textContent = audio.muted ? '🔇' : '🔊';
+            });
+
+            document.getElementById('pauseBtn').addEventListener('click', togglePause);
+            document.getElementById('resumeBtn').addEventListener('click', togglePause);
+
+            document.getElementById('homeBtn').addEventListener('click', () => {
+                state.running = false;
+                state.inFeedbackModal = false;
+                if (feedbackTypingTimer) clearInterval(feedbackTypingTimer);
+                document.getElementById('grammarFeedbackModal').classList.remove('is-open');
+                document.getElementById('gameContainer').classList.add('hidden');
+                document.getElementById('resultModal').classList.add('hidden');
+                document.getElementById('startScreen').classList.remove('hidden');
+            });
+
+            // أزرار شاشة النتائج
+            document.getElementById('nextLevelBtn').addEventListener('click', () => {
+                document.getElementById('resultModal').classList.add('hidden');
+                state.level++;
+                initLevel();
+            });
+
+            document.getElementById('restartBtn').addEventListener('click', () => {
+                document.getElementById('resultModal').classList.add('hidden');
+                startNewGame();
+            });
+
+            // أزرار التحكم اللمسية الافتراضية
+            document.querySelectorAll('.dpad-btn').forEach(btn => {
+                const startMove = (e) => {
+                    e.preventDefault();
+                    setDirection(btn.dataset.dir);
+                };
+                const stopMove = (e) => {
+                    e.preventDefault();
+                    clearDirection(btn.dataset.dir);
+                };
+                btn.addEventListener('touchstart', startMove, { passive: false });
+                btn.addEventListener('touchend', stopMove, { passive: false });
+                btn.addEventListener('touchcancel', stopMove, { passive: false });
+                btn.addEventListener('mousedown', startMove);
+                btn.addEventListener('mouseup', stopMove);
+                btn.addEventListener('mouseleave', stopMove);
+            });
+
+            updateExplainToggleUI();
+        }
+
+        function setGhostSpeedSetting(speedKey) {
+            config.ghostSpeed = speedKey;
+
+            // تحديث أزرار شاشة البداية
+            document.querySelectorAll('#ghostSpeedSelector button').forEach(b => {
+                b.classList.toggle('active', b.dataset.speed === speedKey);
+            });
+
+            // تحديث أزرار الشريط العلوي أثناء اللعب
+            document.querySelectorAll('.ingame-speed-btn').forEach(b => {
+                if (b.dataset.speed === speedKey) {
+                    b.classList.add('bg-blue-600', 'text-white');
+                    b.classList.remove('text-slate-300');
+                } else {
+                    b.classList.remove('bg-blue-600', 'text-white');
+                    b.classList.add('text-slate-300');
+                }
+            });
+
+            // تحديث سرعة الأشباح الحالية مباشرة أثناء اللعب
+            const newSpeed = getCalculatedGhostSpeed();
+            ghosts.forEach(g => {
+                g.speed = newSpeed;
+            });
+        }
+
+        function getCalculatedGhostSpeed() {
+            const baseSpeed = GHOST_SPEED_MAP[config.ghostSpeed] || 2.1;
+            const levelBonus = Math.min((state.level - 1) * 0.15, 0.9);
+            return baseSpeed + levelBonus;
+        }
+
+        function updateExplainToggleUI() {
+            const btn = document.getElementById('ingameExplainBtn');
+            if (!btn) return;
+            if (config.explainMistakes) {
+                btn.className = "p-2 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 rounded-xl border border-emerald-500/40 cursor-pointer text-sm sm:text-base";
+            } else {
+                btn.className = "p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl border border-slate-700 cursor-pointer text-sm sm:text-base opacity-60";
+            }
+        }
+
+        let feedbackTypingTimer = null;
+
+        function showGrammarFeedback(wordObj) {
+            state.paused = true;
+            state.inFeedbackModal = true;
+            heldDirections.clear();
+            pacman.dir = { x: 0, y: 0 };
+            pacman.nextDir = { x: 0, y: 0 };
+
+            const info = buildGrammarExplanation(wordObj, state.currentTarget);
+            document.getElementById('feedbackWordBadge').textContent = wordObj.text;
+            document.getElementById('feedbackActualType').textContent = `هذه الكلمة: ${info.actualTitle}`;
+
+            const reasonEl = document.getElementById('feedbackReason');
+            reasonEl.textContent = "";
+
+            const modal = document.getElementById('grammarFeedbackModal');
+            // تفعيل حركة الظهور السلسة
+            requestAnimationFrame(() => {
+                modal.classList.add('is-open');
+            });
+
+            // تأثير كتابة الحوار تدريجيًا مثل ألعاب المغامرات
+            if (feedbackTypingTimer) clearInterval(feedbackTypingTimer);
+            const fullText = info.reason;
+            let charIndex = 0;
+            feedbackTypingTimer = setInterval(() => {
+                charIndex += 2;
+                reasonEl.textContent = fullText.slice(0, charIndex);
+                if (charIndex >= fullText.length) {
+                    clearInterval(feedbackTypingTimer);
+                    feedbackTypingTimer = null;
+                }
+            }, 16);
+        }
+
+        function closeGrammarFeedback() {
+            if (!state.inFeedbackModal) return;
+            if (feedbackTypingTimer) {
+                clearInterval(feedbackTypingTimer);
+                feedbackTypingTimer = null;
+            }
+            const modal = document.getElementById('grammarFeedbackModal');
+            modal.classList.remove('is-open');
+            state.inFeedbackModal = false;
+            state.paused = false;
+            state.invulnTimer = Math.max(state.invulnTimer, 1.5); // حماية وجيزة بعد إغلاق النافذة
+            lastTimestamp = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // تتبع الأزرار المضغوطة حاليًا للحركة المستمرة أثناء الضغط والتوقف عند الرفع
+        const heldDirections = new Set();
+
+        function getDirFromKey(key) {
+            switch (key) {
+                case 'ArrowUp': case 'w': case 'W': return 'UP';
+                case 'ArrowDown': case 's': case 'S': return 'DOWN';
+                case 'ArrowLeft': case 'a': case 'A': return 'LEFT';
+                case 'ArrowRight': case 'd': case 'D': return 'RIGHT';
+                default: return null;
+            }
+        }
+
+        // التحكم عبر لوحة المفاتيح (الضغط المستمر)
+        window.addEventListener('keydown', (e) => {
+            if (state.inFeedbackModal) {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    closeGrammarFeedback();
+                }
+                return;
+            }
+            if (!state.running || state.paused) return;
+            if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+                togglePause();
+                return;
+            }
+            const dir = getDirFromKey(e.key);
+            if (dir) {
+                e.preventDefault();
+                setDirection(dir);
+            }
+        });
+
+        // إيقاف الحركة فور رفع اليد عن السهم
+        window.addEventListener('keyup', (e) => {
+            const dir = getDirFromKey(e.key);
+            if (dir) {
+                e.preventDefault();
+                clearDirection(dir);
+            }
+        });
+
+        // إيقاف الحركة إذا فقدت النافذة التركيز
+        window.addEventListener('blur', () => {
+            heldDirections.clear();
+            pacman.nextDir = { x: 0, y: 0 };
+            pacman.dir = { x: 0, y: 0 };
+        });
+
+        // التحكم عبر السحب باللمس (Swipe) على الشاشة
+        let touchStartX = 0, touchStartY = 0;
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!state.running || state.paused || e.touches.length === 0) return;
+            const dx = e.touches[0].clientX - touchStartX;
+            const dy = e.touches[0].clientY - touchStartY;
+            if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+                heldDirections.clear();
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    setDirection(dx > 0 ? 'RIGHT' : 'LEFT');
+                } else {
+                    setDirection(dy > 0 ? 'DOWN' : 'UP');
+                }
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            heldDirections.clear();
+            pacman.nextDir = { x: 0, y: 0 };
+            pacman.dir = { x: 0, y: 0 };
+        }, { passive: true });
+
+        function applyDirectionVector(dirName) {
+            if (dirName === 'UP') pacman.nextDir = { x: 0, y: -1 };
+            else if (dirName === 'DOWN') pacman.nextDir = { x: 0, y: 1 };
+            else if (dirName === 'LEFT') pacman.nextDir = { x: -1, y: 0 };
+            else if (dirName === 'RIGHT') pacman.nextDir = { x: 1, y: 0 };
+            else pacman.nextDir = { x: 0, y: 0 };
+        }
+
+        function setDirection(dirName) {
+            // إضافة الاتجاه إلى مجموعة الأزرار المضغوطة وتفعيله فورًا
+            heldDirections.delete(dirName);
+            heldDirections.add(dirName);
+            applyDirectionVector(dirName);
+        }
+
+        function clearDirection(dirName) {
+            heldDirections.delete(dirName);
+            if (heldDirections.size > 0) {
+                // إذا كان هناك زر آخر ما زال مضغوطًا، انتقل إليه
+                const lastDir = Array.from(heldDirections).pop();
+                applyDirectionVector(lastDir);
+            } else {
+                // توقف فوري عند رفع اليد عن جميع الأزرار
+                pacman.nextDir = { x: 0, y: 0 };
+                pacman.dir = { x: 0, y: 0 };
+            }
+        }
+
+        function togglePause() {
+            if (!state.running || state.inFeedbackModal) return;
+            state.paused = !state.paused;
+            const overlay = document.getElementById('overlayMessage');
+            const resumeBtn = document.getElementById('resumeBtn');
+            if (state.paused) {
+                document.getElementById('overlayTitle').textContent = "اللعبة متوقفة";
+                document.getElementById('overlaySub').textContent = "اضغط متابعة لإكمال التحدي";
+                resumeBtn.classList.remove('hidden');
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+                resumeBtn.classList.add('hidden');
+                lastTimestamp = performance.now();
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 6. إعداد المرحلة وتوزيع الكلمات والأشباح
+         * ============================================================================
+         */
+        function startNewGame() {
+            state.level = 1;
+            state.score = 0;
+            state.lives = 3;
+            state.combo = 0;
+            state.correctHits = 0;
+            state.wrongHits = 0;
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameContainer').classList.remove('hidden');
+            resizeCanvas();
+            initLevel();
+        }
+
+        function pickTargetCategory() {
+            const posPool = ['noun', 'verb', 'particle'];
+            const tensePool = ['past', 'present', 'imperative'];
+
+            if (config.mode === 'pos') {
+                return posPool[(state.level - 1) % posPool.length];
+            } else if (config.mode === 'tense') {
+                return tensePool[(state.level - 1) % tensePool.length];
+            } else {
+                const all = [...posPool, ...tensePool];
+                return all[Math.floor(Math.random() * all.length)];
+            }
+        }
+
+        function getWordsForCategory(cat) {
+            const bank = WORD_BANK[config.grade];
+            if (cat === 'verb') {
+                return [...bank.past, ...bank.present, ...bank.imperative];
+            }
+            return [...bank[cat]];
+        }
+
+        function initLevel() {
+            // نسخ المتاهة
+            maze = MAZE_TEMPLATE.map(row => [...row]);
+            particles = [];
+            floatingTexts = [];
+            powerPellets = [];
+            wordItems = [];
+
+            // تحديد الهدف النحوي للمرحلة
+            state.currentTarget = pickTargetCategory();
+            state.targetCollected = 0;
+            state.powerTimer = 0;
+            state.invulnTimer = 2.0;
+            state.switchTimer = config.mode === 'mixed' ? 25 : 0;
+
+            // تحديد عدد الكلمات المطلوبة والمشتتة حسب المستوى
+            const targetCount = Math.min(6 + state.level, 10);
+            const distractorCount = config.difficulty === 'easy' ? 5 : (config.difficulty === 'medium' ? 7 : 9);
+            state.targetTotal = targetCount;
+
+            // جمع المواقع المتاحة في الممرات (بعيدًا عن نقطة البداية)
+            let availableCells = [];
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (maze[r][c] === 2) {
+                        powerPellets.push({ x: c, y: r, active: true });
+                    } else if (maze[r][c] === 0 && !(Math.abs(c - 9) <= 1 && Math.abs(r - 10) <= 1)) {
+                        availableCells.push({ x: c, y: r });
+                    }
+                }
+            }
+
+            // خلط الخلايا المتاحة
+            availableCells.sort(() => Math.random() - 0.5);
+
+            // اختيار كلمات الهدف
+            let targetWordsPool = getWordsForCategory(state.currentTarget).sort(() => Math.random() - 0.5);
+            for (let i = 0; i < targetCount && availableCells.length > 0; i++) {
+                const cell = availableCells.pop();
+                wordItems.push({
+                    x: cell.x,
+                    y: cell.y,
+                    text: targetWordsPool[i % targetWordsPool.length],
+                    category: state.currentTarget,
+                    isTarget: true,
+                    pulse: Math.random() * Math.PI * 2
+                });
+            }
+
+            // اختيار كلمات مشتتة من تصنيفات أخرى
+            const otherCats = (config.mode === 'tense' ? ['past', 'present', 'imperative'] : ['noun', 'verb', 'particle'])
+                .filter(c => c !== state.currentTarget);
+
+            for (let i = 0; i < distractorCount && availableCells.length > 0; i++) {
+                const cell = availableCells.pop();
+                const dCat = otherCats[i % otherCats.length];
+                const dPool = getWordsForCategory(dCat);
+                const wordText = dPool[Math.floor(Math.random() * dPool.length)];
+                wordItems.push({
+                    x: cell.x,
+                    y: cell.y,
+                    text: wordText,
+                    category: dCat,
+                    isTarget: false,
+                    pulse: Math.random() * Math.PI * 2
+                });
+            }
+
+            resetPositions();
+            updateHUD();
+            showCountdown();
+        }
+
+        function resetPositions() {
+            pacman.x = 9;
+            pacman.y = 10;
+            pacman.dir = { x: 0, y: 0 };
+            pacman.nextDir = { x: 0, y: 0 };
+            heldDirections.clear();
+            pacman.speed = 4.6 + Math.min(state.level * 0.15, 1.2);
+
+            // إنشاء الأشباح حسب مستوى الصعوبة
+            // إنشاء الأشباح حسب مستوى الصعوبة وسرعتها المحددة
+            const ghostCount = config.difficulty === 'easy' ? 2 : (config.difficulty === 'medium' ? 3 : 4);
+            const currentGhostSpeed = getCalculatedGhostSpeed();
+
+            ghosts = [];
+            const spawnOffsets = [{x: 9, y: 6}, {x: 8, y: 6}, {x: 10, y: 6}, {x: 9, y: 7}];
+            for (let i = 0; i < ghostCount; i++) {
+                const style = GHOST_STYLES[i % GHOST_STYLES.length];
+                ghosts.push({
+                    x: spawnOffsets[i].x,
+                    y: spawnOffsets[i].y,
+                    dir: { x: i % 2 === 0 ? 1 : -1, y: 0 },
+                    speed: currentGhostSpeed,
+                    color: style.color,
+                    name: style.name,
+                    type: style.type,
+                    scared: false,
+                    eatenTimer: 0
+                });
+            }
+        }
+
+        function showCountdown() {
+            state.running = false;
+            const overlay = document.getElementById('overlayMessage');
+            const title = document.getElementById('overlayTitle');
+            const sub = document.getElementById('overlaySub');
+            document.getElementById('resumeBtn').classList.add('hidden');
+            overlay.classList.remove('hidden');
+
+            sub.textContent = CATEGORIES[state.currentTarget].prompt;
+            let count = 3;
+            title.textContent = count;
+
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    title.textContent = count;
+                } else if (count === 0) {
+                    title.textContent = "انطلق!";
+                } else {
+                    clearInterval(timer);
+                    overlay.classList.add('hidden');
+                    state.running = true;
+                    state.paused = false;
+                    lastTimestamp = performance.now();
+                    requestAnimationFrame(gameLoop);
+                }
+            }, 550);
+        }
+
+        /**
+         * ============================================================================
+         * 7. تحديث الفيزياء، الحركة، والذكاء الاصطناعي للأشباح
+         * ============================================================================
+         */
+        function isWall(col, row) {
+            const c = Math.round(col);
+            const r = Math.round(row);
+            if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return true;
+            return maze[r][c] === 1;
+        }
+
+        function canMove(x, y, dir) {
+            const targetCol = Math.round(x + dir.x);
+            const targetRow = Math.round(y + dir.y);
+            return !isWall(targetCol, targetRow);
+        }
+
+        function update(dt) {
+            // تحديث المؤقتات
+            if (state.invulnTimer > 0) state.invulnTimer -= dt;
+            if (state.powerTimer > 0) {
+                state.powerTimer -= dt;
+                const banner = document.getElementById('statusBanner');
+                banner.style.opacity = '1';
+                banner.textContent = `⚡ وضع الطاقة مفعل! اطرد الأشباح (${Math.ceil(state.powerTimer)}ث)`;
+                if (state.powerTimer <= 0) {
+                    ghosts.forEach(g => g.scared = false);
+                    banner.style.opacity = '0';
+                }
+            }
+
+            // تحديث تبديل الهدف في الوضع الشامل
+            if (config.mode === 'mixed' && state.switchTimer > 0) {
+                state.switchTimer -= dt;
+                if (state.switchTimer <= 0) {
+                    state.switchTimer = 25;
+                    switchMixedTarget();
+                }
+            }
+
+            updatePacman(dt);
+            updateGhosts(dt);
+            checkCollisions();
+            updateParticles(dt);
+        }
+
+        function switchMixedTarget() {
+            // البحث عن تصنيف متاح بين الكلمات المتبقية في المتاهة
+            const availableCats = [...new Set(wordItems.map(w => w.category))];
+            if (availableCats.length > 0) {
+                state.currentTarget = availableCats[Math.floor(Math.random() * availableCats.length)];
+                wordItems.forEach(w => {
+                    w.isTarget = (w.category === state.currentTarget);
+                });
+                state.targetTotal = wordItems.filter(w => w.isTarget).length;
+                state.targetCollected = 0;
+                updateHUD();
+                spawnFloatingText(pacman.x, pacman.y - 0.6, "تغيّر الهدف!", "#c084fc");
+                audio.playPowerUp();
+            }
+        }
+
+        function updatePacman(dt) {
+            // 1. إذا لم يكن هناك أي زر مضغوط حاليًا، يتوقف باكمان في مكانه فورًا
+            if (pacman.nextDir.x === 0 && pacman.nextDir.y === 0) {
+                pacman.dir = { x: 0, y: 0 };
+                return;
+            }
+
+            const desired = pacman.nextDir;
+            const centerX = Math.round(pacman.x);
+            const centerY = Math.round(pacman.y);
+
+            // تحديث اتجاه نظر باكمان فور الضغط على الزر
+            if (desired.x === 1) pacman.rotation = 0;
+            if (desired.x === -1) pacman.rotation = Math.PI;
+            if (desired.y === 1) pacman.rotation = Math.PI / 2;
+            if (desired.y === -1) pacman.rotation = -Math.PI / 2;
+
+            // 2. الانعطاف ومحاذاة الممر بسلاسة (Cornering Assist)
+            // إذا ضغط اللاعب يمين أو يسار، نقرب موقعه الرأسي لمنتصف الممر المفتوح تلقائيًا
+            if (desired.x !== 0) {
+                if (Math.abs(pacman.y - centerY) <= 0.45 && canMove(centerX, centerY, desired)) {
+                    const snapStep = Math.sign(centerY - pacman.y) * Math.min(Math.abs(centerY - pacman.y), pacman.speed * dt * 1.8);
+                    pacman.y += snapStep;
+                    if (Math.abs(pacman.y - centerY) < 0.05) pacman.y = centerY;
+                    pacman.dir = { ...desired };
+                } else if (canMove(centerX, centerY, desired)) {
+                    pacman.y = centerY;
+                    pacman.dir = { ...desired };
+                } else {
+                    // لا يمكن التحرك في هذا الاتجاه لوجود جدار، لكن يمكنه الاستمرار حتى حافة الجدار
+                    pacman.dir = { ...desired };
+                }
+            } else if (desired.y !== 0) {
+                if (Math.abs(pacman.x - centerX) <= 0.45 && canMove(centerX, centerY, desired)) {
+                    const snapStep = Math.sign(centerX - pacman.x) * Math.min(Math.abs(centerX - pacman.x), pacman.speed * dt * 1.8);
+                    pacman.x += snapStep;
+                    if (Math.abs(pacman.x - centerX) < 0.05) pacman.x = centerX;
+                    pacman.dir = { ...desired };
+                } else if (canMove(centerX, centerY, desired)) {
+                    pacman.x = centerX;
+                    pacman.dir = { ...desired };
+                } else {
+                    pacman.dir = { ...desired };
+                }
+            }
+
+            // 3. تنفيذ الحركة الفعلية في الاتجاه المضغوط والتوقف الدقيق عند ملامسة الجدار
+            if (pacman.dir.x !== 0 || pacman.dir.y !== 0) {
+                const curCol = Math.round(pacman.x);
+                const curRow = Math.round(pacman.y);
+                let nextX = pacman.x + pacman.dir.x * pacman.speed * dt;
+                let nextY = pacman.y + pacman.dir.y * pacman.speed * dt;
+
+                // التحقق من الجدار في الاتجاه الذي يتحرك نحوه
+                if (pacman.dir.x > 0 && !canMove(curCol, curRow, { x: 1, y: 0 }) && nextX > curCol) {
+                    nextX = curCol;
+                } else if (pacman.dir.x < 0 && !canMove(curCol, curRow, { x: -1, y: 0 }) && nextX < curCol) {
+                    nextX = curCol;
+                }
+
+                if (pacman.dir.y > 0 && !canMove(curCol, curRow, { x: 0, y: 1 }) && nextY > curRow) {
+                    nextY = curRow;
+                } else if (pacman.dir.y < 0 && !canMove(curCol, curRow, { x: 0, y: -1 }) && nextY < curRow) {
+                    nextY = curRow;
+                }
+
+                const moved = (nextX !== pacman.x || nextY !== pacman.y);
+                pacman.x = nextX;
+                pacman.y = nextY;
+
+                // تحريك الفم وتشغيل الصوت فقط أثناء الحركة الفعلية
+                if (moved) {
+                    pacman.mouthAngle += (pacman.mouthOpening ? 1 : -1) * dt * 3.5;
+                    if (pacman.mouthAngle >= 0.35) pacman.mouthOpening = false;
+                    if (pacman.mouthAngle <= 0.04) pacman.mouthOpening = true;
+
+                    state.wakaTimer += dt;
+                    if (state.wakaTimer >= 0.25) {
+                        state.wakaTimer = 0;
+                        audio.playWaka();
+                    }
+                }
+            }
+        }
+
+        function updateGhosts(dt) {
+            ghosts.forEach(ghost => {
+                if (ghost.eatenTimer > 0) {
+                    ghost.eatenTimer -= dt;
+                    return;
+                }
+
+                const centerX = Math.round(ghost.x);
+                const centerY = Math.round(ghost.y);
+                const distToCenter = Math.hypot(ghost.x - centerX, ghost.y - centerY);
+                const currentSpeed = ghost.scared ? ghost.speed * 0.65 : ghost.speed;
+
+                if (distToCenter < 0.12) {
+                    // تحديد الاتجاهات الممكنة عند التقاطع (تجنب الرجوع للخلف إلا عند الضرورة)
+                    const dirs = [
+                        { x: 1, y: 0 }, { x: -1, y: 0 },
+                        { x: 0, y: 1 }, { x: 0, y: -1 }
+                    ];
+                    let validDirs = dirs.filter(d => {
+                        const isReverse = (d.x === -ghost.dir.x && d.y === -ghost.dir.y);
+                        return !isReverse && canMove(centerX, centerY, d);
+                    });
+
+                    if (validDirs.length === 0) {
+                        validDirs = dirs.filter(d => canMove(centerX, centerY, d));
+                    }
+
+                    if (validDirs.length > 0) {
+                        // اختيار أفضل اتجاه حسب سلوك الشبح
+                        let chosen = validDirs[0];
+                        if (ghost.scared) {
+                            // الهروب بعيدًا عن باكمان
+                            validDirs.sort((a, b) => {
+                                const da = Math.hypot((centerX + a.x) - pacman.x, (centerY + a.y) - pacman.y);
+                                const db = Math.hypot((centerX + b.x) - pacman.x, (centerY + b.y) - pacman.y);
+                                return db - da;
+                            });
+                            chosen = validDirs[0];
+                        } else if (ghost.type === 'chase' || (ghost.type === 'ambush' && Math.random() < 0.75)) {
+                            // مطاردة باكمان
+                            const targetX = ghost.type === 'ambush' ? pacman.x + pacman.dir.x * 2 : pacman.x;
+                            const targetY = ghost.type === 'ambush' ? pacman.y + pacman.dir.y * 2 : pacman.y;
+                            validDirs.sort((a, b) => {
+                                const da = Math.hypot((centerX + a.x) - targetX, (centerY + a.y) - targetY);
+                                const db = Math.hypot((centerX + b.x) - targetX, (centerY + b.y) - targetY);
+                                return da - db;
+                            });
+                            chosen = validDirs[0];
+                        } else {
+                            chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
+                        }
+
+                        if (chosen.x !== ghost.dir.x || chosen.y !== ghost.dir.y) {
+                            ghost.x = centerX;
+                            ghost.y = centerY;
+                            ghost.dir = chosen;
+                        }
+                    }
+                }
+
+                ghost.x += ghost.dir.x * currentSpeed * dt;
+                ghost.y += ghost.dir.y * currentSpeed * dt;
+            });
+        }
+
+        function checkCollisions() {
+            // 1. التهام كرات الطاقة الذهبية
+            powerPellets.forEach(p => {
+                if (p.active && Math.hypot(pacman.x - p.x, pacman.y - p.y) < 0.55) {
+                    p.active = false;
+                    state.powerTimer = config.difficulty === 'hard' ? 6 : 8;
+                    ghosts.forEach(g => { if (g.eatenTimer <= 0) g.scared = true; });
+                    state.score += 150;
+                    audio.playPowerUp();
+                    spawnParticles(p.x, p.y, "#facc15", 16);
+                    spawnFloatingText(p.x, p.y, "طاقة! +150", "#facc15");
+                    updateHUD();
+                }
+            });
+
+            // 2. التهام الكلمات في المتاهة
+            for (let i = wordItems.length - 1; i >= 0; i--) {
+                const w = wordItems[i];
+                if (Math.hypot(pacman.x - w.x, pacman.y - w.y) < 0.58) {
+                    wordItems.splice(i, 1);
+
+                    if (w.isTarget) {
+                        // إجابة صحيحة!
+                        state.combo++;
+                        state.correctHits++;
+                        state.targetCollected++;
+                        const bonus = state.combo >= 3 ? 150 : 100;
+                        state.score += bonus;
+
+                        audio.playCorrect(state.combo);
+                        spawnParticles(w.x, w.y, "#4ade80", 14);
+                        spawnFloatingText(w.x, w.y, `+${bonus}`, "#4ade80");
+                        updateHUD();
+
+                        // التحقق من إكمال جميع كلمات الهدف
+                        if (state.targetCollected >= state.targetTotal) {
+                            handleLevelComplete();
+                            return;
+                        }
+                    } else {
+                        // كلمة خاطئة (مشتتة)
+                        state.combo = 0;
+                        state.wrongHits++;
+                        state.score = Math.max(0, state.score - 50);
+
+                        audio.playWrong();
+                        spawnParticles(w.x, w.y, "#f87171", 12);
+                        spawnFloatingText(w.x, w.y, "خطأ! -50", "#f87171");
+                        updateHUD();
+
+                        // إيقاف اللعبة مؤقتًا وعرض الشرح النحوي إذا كانت الميزة مفعّلة
+                        if (config.explainMistakes) {
+                            render(performance.now());
+                            showGrammarFeedback(w);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // 3. التصادم مع الأشباح
+            ghosts.forEach(ghost => {
+                if (ghost.eatenTimer > 0) return;
+                if (Math.hypot(pacman.x - ghost.x, pacman.y - ghost.y) < 0.62) {
+                    if (ghost.scared) {
+                        // طرد الشبح!
+                        ghost.scared = false;
+                        ghost.eatenTimer = 4.0;
+                        ghost.x = 9;
+                        ghost.y = 6;
+                        state.score += 300;
+                        audio.playEatGhost();
+                        spawnParticles(pacman.x, pacman.y, "#38bdf8", 20);
+                        spawnFloatingText(pacman.x, pacman.y, "طرد الشبح! +300", "#38bdf8");
+                        updateHUD();
+                    } else if (state.invulnTimer <= 0) {
+                        // خسارة محاولة وتأثير اهتزاز الشاشة
+                        handlePlayerHit();
+                    }
+                }
+            });
+        }
+
+        function handlePlayerHit() {
+            state.lives--;
+            state.combo = 0;
+            state.invulnTimer = 3.0;
+            audio.playHit();
+            updateHUD();
+
+            // تطبيق المؤثرات الفيزيائية والحركية على الشاشة
+            const wrapper = document.getElementById('canvasWrapper');
+            wrapper.classList.remove('shake-effect');
+            void wrapper.offsetWidth; // إعادة تشغيل الأنيميشن
+            wrapper.classList.add('shake-effect');
+
+            document.body.classList.remove('damage-flash');
+            void document.body.offsetWidth;
+            document.body.classList.add('damage-flash');
+
+            spawnParticles(pacman.x, pacman.y, "#ef4444", 24);
+
+            if (state.lives <= 0) {
+                state.running = false;
+                setTimeout(() => showResultScreen(false), 500);
+            } else {
+                resetPositions();
+            }
+        }
+
+        function handleLevelComplete() {
+            state.running = false;
+            audio.playWin();
+            spawnParticles(pacman.x, pacman.y, "#facc15", 35);
+            setTimeout(() => showResultScreen(true), 600);
+        }
+
+        function showResultScreen(isWin) {
+            const modal = document.getElementById('resultModal');
+            const badge = document.getElementById('resultBadge');
+            const title = document.getElementById('resultTitle');
+            const starsEl = document.getElementById('starsContainer');
+            const nextBtn = document.getElementById('nextLevelBtn');
+
+            const totalAttempts = state.correctHits + state.wrongHits;
+            const accuracy = totalAttempts > 0 ? Math.round((state.correctHits / totalAttempts) * 100) : 100;
+
+            document.getElementById('finalScore').textContent = state.score;
+            document.getElementById('finalAccuracy').textContent = `${accuracy}%`;
+
+            if (isWin) {
+                badge.textContent = `اجتزت المستوى ${state.level} بنجاح!`;
+                badge.className = "inline-block px-4 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mb-3";
+                title.textContent = "أحسنت يا بطل النحو!";
+                nextBtn.classList.remove('hidden');
+
+                const starCount = accuracy >= 90 && state.lives === 3 ? 3 : (accuracy >= 70 ? 2 : 1);
+                starsEl.innerHTML = '⭐'.repeat(starCount) + '☆'.repeat(3 - starCount);
+                document.getElementById('finalMedal').textContent = starCount === 3 ? "وسام الإتقان النحوي 👑" : (starCount === 2 ? "صائد الكلمات الماهر 🏅" : "مغامر المتاهة 🎯");
+            } else {
+                badge.textContent = "انتهت المحاولات";
+                badge.className = "inline-block px-4 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 mb-3";
+                title.textContent = "حاول مرة أخرى!";
+                nextBtn.classList.add('hidden');
+                starsEl.innerHTML = '☆☆☆';
+                document.getElementById('finalMedal').textContent = "تدرّب أكثر وستنتصر 💪";
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function updateHUD() {
+            const targetInfo = CATEGORIES[state.currentTarget];
+            const targetEl = document.getElementById('targetLabel');
+            targetEl.textContent = targetInfo.prompt;
+            targetEl.style.color = targetInfo.color;
+
+            document.getElementById('targetProgress').textContent = `${state.targetCollected}/${state.targetTotal}`;
+            document.getElementById('scoreDisplay').textContent = state.score;
+            document.getElementById('levelDisplay').textContent = state.level;
+            document.getElementById('livesDisplay').textContent = '❤️'.repeat(Math.max(0, state.lives)) + '🖤'.repeat(Math.max(0, 3 - state.lives));
+        }
+
+        /**
+         * ============================================================================
+         * 8. نظام الجسيمات والنصوص العائمة (Visual Juice)
+         * ============================================================================
+         */
+        function spawnParticles(gx, gy, color, count) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 3.5;
+                particles.push({
+                    x: gx,
+                    y: gy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 0.45 + Math.random() * 0.25,
+                    maxLife: 0.7,
+                    color: color,
+                    size: 2.5 + Math.random() * 3
+                });
+            }
+        }
+
+        function spawnFloatingText(gx, gy, text, color) {
+            floatingTexts.push({
+                x: gx,
+                y: gy,
+                text: text,
+                color: color,
+                life: 0.9
+            });
+        }
+
+        function updateParticles(dt) {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.life -= dt;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const ft = floatingTexts[i];
+                ft.y -= 1.1 * dt;
+                ft.life -= dt;
+                if (ft.life <= 0) floatingTexts.splice(i, 1);
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 9. الرسم الهندسي على Canvas والاستجابة لحجم الشاشة
+         * ============================================================================
+         */
+        function resizeCanvas() {
+            const wrapper = document.getElementById('canvasWrapper');
+            const maxW = wrapper.clientWidth - 8;
+            const maxH = wrapper.clientHeight - 8;
+            const sizeByW = Math.floor(maxW / COLS);
+            const sizeByH = Math.floor(maxH / ROWS);
+            state.tileSize = Math.max(18, Math.min(sizeByW, sizeByH));
+
+            canvas.width = COLS * state.tileSize;
+            canvas.height = ROWS * state.tileSize;
+        }
+
+        window.addEventListener('resize', () => {
+            if (!document.getElementById('gameContainer').classList.contains('hidden')) {
+                resizeCanvas();
+            }
+        });
+
+        function render(time) {
+            const ts = state.tileSize;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. رسم جدران المتاهة بأسلوب النيون
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (maze[r][c] === 1) {
+                        const x = c * ts;
+                        const y = r * ts;
+                        ctx.fillStyle = '#0f2557';
+                        ctx.strokeStyle = '#3b82f6';
+                        ctx.lineWidth = Math.max(1.5, ts * 0.06);
+
+                        ctx.beginPath();
+                        ctx.roundRect(x + 2, y + 2, ts - 4, ts - 4, ts * 0.2);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // 2. رسم كرات الطاقة الذهبية في الزوايا
+            const pulse = Math.sin(time * 0.006) * 2.5;
+            powerPellets.forEach(p => {
+                if (!p.active) return;
+                const cx = (p.x + 0.5) * ts;
+                const cy = (p.y + 0.5) * ts;
+
+                ctx.save();
+                ctx.shadowColor = '#facc15';
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(cx, cy, Math.max(5, ts * 0.22 + pulse * 0.4), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // 3. رسم كبسولات الكلمات العربية بوضوح عالٍ
+            const fontSize = Math.max(11, Math.floor(ts * 0.34));
+            ctx.font = `900 ${fontSize}px 'Cairo', sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            wordItems.forEach(w => {
+                const cx = (w.x + 0.5) * ts;
+                const cy = (w.y + 0.5) * ts;
+                const textMetrics = ctx.measureText(w.text);
+                const pillW = Math.max(ts * 0.95, textMetrics.width + 12);
+                const pillH = Math.max(18, ts * 0.56);
+
+                ctx.save();
+                // خلفية الكبسولة
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath();
+                ctx.roundRect(cx - pillW / 2, cy - pillH / 2, pillW, pillH, pillH / 2);
+                ctx.fill();
+
+                // إطار الكبسولة (يضيء بلون الهدف إذا كان وضع التدريب مفعلاً)
+                if (config.showHints && w.isTarget) {
+                    ctx.strokeStyle = '#22c55e';
+                    ctx.lineWidth = 2.8;
+                    ctx.shadowColor = '#22c55e';
+                    ctx.shadowBlur = 10;
+                } else {
+                    ctx.strokeStyle = '#64748b';
+                    ctx.lineWidth = 1.5;
+                }
+                ctx.stroke();
+
+                // نص الكلمة
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#090d16';
+                ctx.fillText(w.text, cx, cy + 1);
+                ctx.restore();
+            });
+
+            // 4. رسم شخصية باكمان
+            if (state.invulnTimer <= 0 || Math.floor(state.invulnTimer * 12) % 2 === 0) {
+                const px = (pacman.x + 0.5) * ts;
+                const py = (pacman.y + 0.5) * ts;
+                const radius = ts * 0.42;
+
+                ctx.save();
+                ctx.translate(px, py);
+                ctx.rotate(pacman.rotation);
+
+                ctx.shadowColor = state.powerTimer > 0 ? '#38bdf8' : '#facc15';
+                ctx.shadowBlur = 14;
+                ctx.fillStyle = '#facc15';
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius, pacman.mouthAngle * Math.PI, (2 - pacman.mouthAngle) * Math.PI);
+                ctx.closePath();
+                ctx.fill();
+
+                // عين باكمان
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#090d16';
+                ctx.beginPath();
+                ctx.arc(radius * 0.1, -radius * 0.5, radius * 0.14, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            // 5. رسم الأشباح
+            ghosts.forEach(g => {
+                if (g.eatenTimer > 0) return;
+                const gx = (g.x + 0.5) * ts;
+                const gy = (g.y + 0.5) * ts;
+                const r = ts * 0.41;
+
+                ctx.save();
+                const isFlashing = g.scared && state.powerTimer < 2.2 && Math.floor(state.powerTimer * 8) % 2 === 0;
+                const bodyColor = g.scared ? (isFlashing ? '#f8fafc' : '#2563eb') : g.color;
+
+                ctx.shadowColor = bodyColor;
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = bodyColor;
+
+                // رأس وجسم الشبح
+                ctx.beginPath();
+                ctx.arc(gx, gy - r * 0.15, r, Math.PI, 0, false);
+                ctx.lineTo(gx + r, gy + r * 0.85);
+                // تموجات أسفل الشبح
+                const waves = 3;
+                const waveW = (r * 2) / waves;
+                for (let i = 0; i < waves; i++) {
+                    const wx = gx + r - i * waveW;
+                    ctx.lineTo(wx - waveW / 2, gy + r * 0.55);
+                    ctx.lineTo(wx - waveW, gy + r * 0.85);
+                }
+                ctx.closePath();
+                ctx.fill();
+
+                // عينا الشبح
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(gx - r * 0.35, gy - r * 0.2, r * 0.24, 0, Math.PI * 2);
+                ctx.arc(gx + r * 0.35, gy - r * 0.2, r * 0.24, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = g.scared ? '#ef4444' : '#0f172a';
+                ctx.beginPath();
+                ctx.arc(gx - r * 0.35 + g.dir.x * 2, gy - r * 0.2 + g.dir.y * 2, r * 0.12, 0, Math.PI * 2);
+                ctx.arc(gx + r * 0.35 + g.dir.x * 2, gy - r * 0.2 + g.dir.y * 2, r * 0.12, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            });
+
+            // 6. رسم الجسيمات والنصوص العائمة
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc((p.x + 0.5) * ts, (p.y + 0.5) * ts, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            floatingTexts.forEach(ft => {
+                ctx.save();
+                ctx.globalAlpha = Math.min(1, ft.life * 1.4);
+                ctx.font = `900 ${Math.max(13, Math.floor(ts * 0.42))}px 'Cairo', sans-serif`;
+                ctx.fillStyle = ft.color;
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 6;
+                ctx.fillText(ft.text, (ft.x + 0.5) * ts, (ft.y + 0.5) * ts);
+                ctx.restore();
+            });
+        }
+
+        /**
+         * ============================================================================
+         * 10. حلقة اللعب الرئيسية (Main Game Loop)
+         * ============================================================================
+         */
+        let lastTimestamp = 0;
+        function gameLoop(timestamp) {
+            if (!state.running || state.paused) return;
+
+            const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
+            lastTimestamp = timestamp;
+
+            update(dt);
+            render(timestamp);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // تشغيل الإعدادات عند تحميل الصفحة
+        window.onload = function () {
+            setupUIListeners();
+        };
+    </script>
+</body>
+</html>
